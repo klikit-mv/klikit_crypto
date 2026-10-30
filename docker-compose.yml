@@ -1,0 +1,64 @@
+# Single-host deployment. For production, put secrets in .env (never commit it), back
+# MySQL/Redis volumes up, and run the MT5 bridge on a separate Windows host.
+x-app: &app
+  build: .
+  image: klikit-trading:latest
+  env_file: .env
+  environment:
+    DB_HOST: mysql
+    REDIS_HOST: redis
+    CCXT_BRIDGE_URL: http://execution-bridge:8081
+  depends_on: [mysql, redis]
+  restart: unless-stopped
+  volumes:
+    - storage:/var/www/html/storage
+
+services:
+  app:
+    <<: *app
+
+  horizon:
+    <<: *app
+    command: ["php", "artisan", "horizon"]
+
+  scheduler:
+    <<: *app
+    command: ["php", "artisan", "schedule:work"]
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on: [app]
+    ports: ["80:80"]
+    volumes:
+      - ./deploy/nginx/docker.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public:/var/www/html/public:ro
+    restart: unless-stopped
+
+  execution-bridge:
+    build: ./services/execution-bridge
+    environment:
+      BRIDGE_TOKEN: ${CCXT_BRIDGE_TOKEN}
+      HOST: 0.0.0.0
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    command: ["--default-time-zone=+00:00", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes: [mysql:/var/lib/mysql]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis:/data]
+    restart: unless-stopped
+
+volumes:
+  storage:
+  mysql:
+  redis:

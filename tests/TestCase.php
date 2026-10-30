@@ -11,10 +11,17 @@ use Database\Seeders\MarketSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\SubscriptionPlanSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Http::preventStrayRequests(); // tests must never reach real exchanges, pools or Telegram
+    }
+
     protected function seedPlatform(): void
     {
         $this->seed([RolesAndPermissionsSeeder::class, SubscriptionPlanSeeder::class, MarketSeeder::class]);

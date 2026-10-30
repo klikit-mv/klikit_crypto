@@ -123,6 +123,8 @@ return new class extends Migration
     {
         Schema::table('subscriptions', fn (Blueprint $t) => $t->dropColumn('renewal_invoiced_at'));
         Schema::table('mining_earnings', function (Blueprint $t) {
+            // MySQL needs another index for the user_id foreign key before the unique goes.
+            $t->index('user_id');
             $t->dropUnique('mining_earnings_daily_unique');
             $t->dropColumn('external_id');
         });
@@ -137,6 +139,7 @@ return new class extends Migration
         Schema::table('signal_executions', fn (Blueprint $t) => $t->dropColumn('reason'));
         Schema::dropIfExists('signal_subscriptions');
         Schema::table('telegram_signals', function (Blueprint $t) {
+            $t->index('channel_id');
             $t->dropUnique(['channel_id', 'message_id']);
             $t->dropColumn(['message_id', 'market_type', 'leverage', 'expires_at']);
         });

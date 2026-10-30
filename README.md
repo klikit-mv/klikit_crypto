@@ -1,169 +1,172 @@
-# Klikit Trading Platform — v1.0 foundation
+# Klikit Trading Platform
 
-Laravel 12 + MySQL 8 + Redis multi-asset trading platform (crypto, Forex, subscriptions, signals,
-bots and mining management). This release covers the **v1.0 development package**:
+Laravel 12 + MySQL 8 + Redis multi-asset trading platform: crypto and Forex trading, Telegram
+signals, chart analysis, trading bots, mining management, subscriptions and an admin back office.
+All eight roadmap phases are implemented.
 
-- Complete MySQL schema for all modules (≈55 tables, including bots, Telegram signals and mining)
-- Authentication (web sessions + Sanctum API tokens) and permission-based RBAC
-- User and admin dashboards (Blade + Bootstrap 5)
-- Subscription plans, entitlements, invoices, coupons and a manual payment gateway
-- Exchange/broker integration framework with a paper-trading adapter
-- Shared risk engine, double-entry ledger, wallets, deposits and withdrawals
+| Module | What it does |
+| --- | --- |
+| Core | Web + API auth (Sanctum), permission-based RBAC, audit log, user and admin dashboards |
+| Subscriptions | Plans with editable entitlements, coupons, invoices, bank transfer + Stripe Checkout, renewals, expiry |
+| Crypto & Forex | Shared risk engine, paper trading, live routing through CCXT / MT5 bridges, positions, double-entry ledger |
+| Telegram signals | Bot webhook + ingest API, parser that rejects ambiguous messages, approve-or-auto execution |
+| Chart analysis | OHLC candles, EMA/SMA/RSI/MACD, TradingView Lightweight Charts, price and RSI alerts |
+| Trading bots | Grid, DCA, scalping, trend, RSI, MACD strategies; semi/fully automatic; performance; backtesting |
+| Mining | Devices, hardware agent, pool API sync, payouts, electricity/pool-fee/net-profit accounting |
+| Production | Horizon queues, health checks, backups, security headers, Docker, nginx/supervisor, CI, k6 load test |
 
-Live order routing is **disabled by default** (`TRADING_LIVE_ENABLED=false`). Every order runs
-against the paper-trading adapter using real stored market prices.
+Live order routing is **off by default** (`TRADING_LIVE_ENABLED=false`): every order runs through
+the paper-trading adapter against real stored prices until you have completed the go-live
+checklist in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Screenshots
 
-| User dashboard | Paper trading |
+| User dashboard | Chart analysis |
 | --- | --- |
-| ![Dashboard](docs/screenshots/02-user-dashboard.png) | ![Trading](docs/screenshots/03-trading.png) |
-| **Admin overview** | **Plan editor** |
-| ![Admin](docs/screenshots/07-admin-overview.png) | ![Plans](docs/screenshots/09-admin-plan-edit.png) |
+| ![Dashboard](docs/screenshots/02-user-dashboard.png) | ![Charts](docs/screenshots/15-charts.png) |
+| **Trading bots** | **Backtesting** |
+| ![Bots](docs/screenshots/16-bots.png) | ![Backtest](docs/screenshots/17-backtest.png) |
+| **Telegram signals** | **Mining** |
+| ![Signals](docs/screenshots/18-signals.png) | ![Mining](docs/screenshots/19-mining.png) |
 
 More in [`docs/screenshots`](docs/screenshots).
 
-## Quick start
+## Quick start (local)
 
 ```bash
 composer install
 cp .env.example .env && php artisan key:generate
-# Local without MySQL/Redis: set DB_CONNECTION=sqlite, QUEUE_CONNECTION=database, CACHE_STORE=database
-php artisan migrate --seed          # roles, plans, venues, instruments, seed prices
+# Without MySQL/Redis: DB_CONNECTION=sqlite, QUEUE_CONNECTION=database, CACHE_STORE=database
+php artisan migrate --seed                 # roles, plans, venues, instruments, strategies, pools
+php artisan market:candles --interval=1h   # optional: chart/backtest history from Binance
 php artisan serve
-php artisan queue:work --queue=trading,default   # executes orders
-php artisan schedule:work                         # price sync, limit-order matching, expiry
+php artisan horizon                        # or: php artisan queue:work --queue=trading,default
+php artisan schedule:work
 ```
 
 With `APP_ENV=local` the seeder creates `admin@example.com` (super admin) and
-`trader@example.com`, both with password `password123`. In production create staff with
+`trader@example.com`, password `password123`. Production staff accounts:
 `php artisan admin:create you@company.com --role=super_admin`.
 
-Tests: `php artisan test` (SQLite in-memory).
+Tests: `php artisan test` (113 tests; CI also runs them against MySQL), `npm test` in
+`services/execution-bridge`, `python -m unittest test_bridge.py` in `services/mt5-bridge`.
 
 ## Architecture
 
 ```
 app/
-├── Models/                      Eloquent models for every table
-├── Modules/                     HTTP layer per module (controllers, requests, resources)
-│   ├── Auth/  Dashboard/  Trading/  Wallet/  Subscriptions/  Administration/
+├── Models/                 Eloquent models (≈60 tables)
+├── Modules/<Module>/Http/  Controllers per module: Auth, Dashboard, Trading, Wallet,
+│                           Subscriptions, ChartAnalysis, Signals, TradingBots, Mining, Administration
 ├── Services/
-│   ├── Access/                  AuditLogger, UserRegistrationService
-│   ├── Accounting/              LedgerService (double entry), WalletService (locks)
-│   ├── Subscriptions/           SubscriptionService (checkout, entitlements, expiry)
-│   ├── Payments/                PaymentGateway contract, ManualPaymentGateway, PaymentService
-│   ├── PlatformSettings.php     admin-editable runtime settings (halt, limits)
-│   └── Trading/
-│       ├── Contracts/           TradingVenueAdapter, ExchangeAdapter, BrokerAdapter, MarketDataProvider
-│       ├── Adapters/            PaperTradingAdapter, CcxtBridgeExchangeAdapter, Mt5BridgeBrokerAdapter
-│       ├── MarketData/          MarketDataService, BinancePublicMarketData (read-only)
-│       ├── RiskManagementService.php
-│       ├── TradingEngineService.php   order lifecycle
-│       ├── SettlementService.php      fills → executions, trades, positions, ledger
-│       ├── ExecutionRouter.php        paper / exchange / broker selection
-│       └── PortfolioService.php       shared crypto + Forex valuation (USD)
-├── Jobs/ExecuteOrderJob.php     runs on the dedicated `trading` queue
-└── Http/Middleware/             active, feature:<key>, idempotent
-config/trading.php  config/permissions.php  config/plans.php
-routes/web.php  routes/api.php (/api/v1)  routes/admin.php (/admin)
+│   ├── Trading/            TradingEngineService, RiskManagementService, SettlementService,
+│   │                       ExecutionRouter, adapters (paper, CCXT bridge, MT5 bridge), market data
+│   ├── Accounting/         LedgerService (double entry), WalletService
+│   ├── Subscriptions/ Payments/   entitlements, checkout, Stripe + manual gateways
+│   ├── Analysis/           candles, indicators, chart data, price alerts
+│   ├── Signals/            parser, signal pipeline, Telegram Bot API client
+│   ├── Bots/               strategies, bot runner, positions/performance, backtester
+│   └── Mining/             device agents, pool clients, profitability
+├── Jobs/ExecuteOrderJob    dedicated `trading` queue (Horizon supervisor)
+services/
+├── execution-bridge/       Node + CCXT live crypto execution (stateless, token-protected)
+└── mt5-bridge/             Python MetaTrader 5 bridge for Forex/CFD (Windows host)
+tools/mining-agent/         CGMiner-API agent that reports rig stats
+deploy/                     nginx, supervisor, php.ini, deploy script
 ```
 
-### Order lifecycle
+### One path for every order
 
 ```
-Manual / signal / bot  →  OrderIntent
-   → RiskManagementService  (account, platform halt, user kill switch, plan, quantity,
-                             leverage, stop-loss, per-trade size, daily loss, positions, exposure)
-   → reserve funds (wallet lock)            ┐ one DB transaction
-   → Order(status=pending)                  ┘ idempotency key unique per user
-   → ExecuteOrderJob (trading queue)
-   → ExecutionRouter → adapter.placeOrder()
-   → SettlementService: executions, trades/positions, ledger postings, release reservation
+Manual order · Telegram signal · Bot decision
+      └─► OrderIntent ─► RiskManagementService ─► funds reserved + Order(pending)   (one DB transaction,
+                                                                                    idempotency key)
+          ─► ExecuteOrderJob (trading queue) ─► ExecutionRouter ─► paper | CCXT bridge | MT5 bridge
+          ─► SettlementService: executions, trades/positions, ledger postings (paper), release reservation
 ```
 
-Rejected orders are persisted with their reason and audited. Spot orders deliver the base
-asset; FUTURES/FOREX/CFD open isolated-margin positions that are closed via
-`POST /api/v1/positions/{id}/close`.
-
-### Separation from the execution engine
-
-Laravel never talks to exchanges directly in live mode. `CcxtBridgeExchangeAdapter` and
-`Mt5BridgeBrokerAdapter` call a separate execution service over HTTP (`CCXT_BRIDGE_URL`,
-`MT5_BRIDGE_URL`) with endpoints `/ticker`, `/orders`, `/orders/sync`, `/orders/cancel`,
-`/positions/close`, `/balances`, `/market-hours`. The order `uuid` is sent as the client order
-ID so retries are safe. Live accounts are non-custodial: funds stay at the venue and no
-platform ledger postings are made for them.
+Risk checks: account status, platform halt, personal kill switch, plan, quantity, leverage,
+stop-loss rules, per-trade size, daily realised loss, open positions, total exposure, and for
+live orders a verified trade-scope venue account. Limits are evaluated in USD equivalent.
 
 ### Accounting
 
-- `LedgerService::post()` refuses any transaction that does not balance per currency.
-- User wallets are liability accounts; cached `wallets.balance` is updated only inside the
-  same DB transaction as the ledger entries, and can never go negative.
-- `locked_balance` holds funds reserved by open orders, margin and pending withdrawals.
-- `php artisan ledger:verify` (scheduled daily) recomputes every wallet from its entries.
-- Deposits and withdrawals of `funding` wallets require staff review; staff cannot review
-  their own withdrawals.
+User wallets are ledger liability accounts. `LedgerService` refuses unbalanced postings,
+cached balances change only in the same transaction as their entries and cannot go negative,
+and `ledger:verify` (daily) recomputes every wallet. Live exchange/broker accounts are
+non-custodial: funds stay at the venue.
 
-### Access control
+### Signals
 
-Permissions live in `config/permissions.php` and are enforced through `Gate` (`@can`,
-`can:` middleware, `$this->authorize()`), never by checking role names. Roles: Super Admin,
-Admin, Manager, Support, Premium User, Standard User. No permission exposes users' exchange
-secrets (encrypted with the app key, hidden from serialisation, shown masked) and no admin
-permission lets staff trade on a user's behalf.
+Supported layouts include `BUY BTC/USDT Entry: 67000-67500 TP1: 68000 SL: 66000 Leverage: 10x`,
+`#ETHUSDT LONG Entry 3500 Targets 3600 3700 Stop 3400` and `EURUSD SELL @ 1.0850 TP 1.0800 SL 1.0900`.
+Messages without a clear direction, instrument, entry, stop-loss and consistent targets are
+logged as ambiguous and never traded. Subscribers choose manual approval or auto-execution,
+an amount per signal and a leverage cap; signals expire after the channel's TTL.
 
-### Subscriptions
+### Bots and backtests
 
-Entitlements are key/value features per plan (`config/plans.php` lists the keys). Users
-without a plan get the `free` set (paper trading). Checkout creates a pending subscription and
-an invoice; confirming the payment (admin or a future provider webhook) activates or extends
-it. `subscriptions:expire` runs hourly. Use `feature:<key>` middleware or
-`SubscriptionService::hasFeature()` to gate features.
+Strategies receive the same `StrategyContext` in live runs (`bots:run`, every minute, closed
+candles only) and in backtests, so results are comparable. Bot holdings and P&L are derived from
+the orders that actually filled. Bots trade spot instruments in paper mode.
+
+### Mining
+
+Hardware reports via `tools/mining-agent/agent.py` with a per-device token. Revenue comes only
+from pool reports (JSON pool API or manual entry), is split between a user's devices by
+hashrate, and `net profit = revenue − electricity − pool fees − other costs`.
+
+## Plans and entitlements
+
+| Feature key | Free | Starter | Pro | Enterprise |
+| --- | --- | --- | --- | --- |
+| trading.paper / trading.manual | ✓ / – | ✓ / ✓ | ✓ / ✓ | ✓ / ✓ |
+| charts.advanced (RSI, MACD, backtests) | – | – | ✓ | ✓ |
+| signals.telegram / signals.daily_limit | – / 0 | – / 5 | ✓ / 50 | ✓ / unlimited |
+| bots.automated / bots.max | – / 0 | – / 0 | ✓ / 3 | ✓ / 20 |
+| alerts.max | 3 | 10 | 50 | unlimited |
+| mining.management, analytics.advanced | – | – | – | ✓ |
+
+Admins edit prices and values at `/admin/plans`.
 
 ## REST API (v1)
 
-Bearer token from `POST /api/v1/auth/login`. Writes marked **(I)** require an
-`Idempotency-Key` header (8–100 chars); replays return the stored response with
-`Idempotent-Replayed: true`, a reused key with a different body returns 422.
+Bearer token from `POST /api/v1/auth/login`. Writes marked **(I)** require an `Idempotency-Key`
+header; replays return the stored response, a reused key with another body returns 422.
 
 | Area | Endpoints |
 | --- | --- |
-| Auth | `POST auth/register`, `POST auth/login`, `POST auth/logout`, `GET/PUT auth/profile` |
-| Dashboard | `GET dashboard/overview?mode=paper`, `GET dashboard/statistics` |
-| Crypto / Forex | `GET {crypto\|forex}/markets`, `/prices`, `/orders`, `POST /orders` (I), `GET /orders/{id}`, `POST /orders/{id}/cancel` (I), `GET /trades` |
-| Positions | `GET positions`, `POST positions/{id}/close` (I) |
-| Risk | `GET/PUT trading/risk-profile`, `POST trading/emergency-stop` |
-| Venue accounts | `GET accounts`, `POST accounts/exchanges`, `POST accounts/brokers`, `DELETE accounts/{exchanges\|brokers}/{id}` |
-| Wallet | `GET wallet/balances`, `/transactions`, `POST wallet/paper/reset`, `GET/POST wallet/deposits` (I), `GET/POST wallet/withdrawals` (I) |
-| Subscriptions | `GET subscriptions/plans` (public), `/current`, `/invoices`, `POST /checkout` (I), `POST /cancel` |
-
-Risk rejections return `422 {"message": ..., "rule": "max_amount_per_trade"}`.
+| Auth | `POST auth/register`, `auth/login`, `auth/logout`, `GET/PUT auth/profile` |
+| Dashboard | `GET dashboard/overview`, `dashboard/statistics`, `notifications` |
+| Crypto / Forex | `GET {crypto\|forex}/markets`, `/prices`, `/orders`, `/trades`; `POST /orders` (I), `/orders/{id}/cancel` (I) |
+| Positions & risk | `GET positions`, `POST positions/{id}/close` (I), `GET/PUT trading/risk-profile`, `POST trading/emergency-stop` |
+| Venue accounts | `GET accounts`, `POST accounts/{exchanges\|brokers}`, `POST …/{id}/verify`, `DELETE …/{id}` |
+| Charts & alerts | `GET charts/{symbol}?interval=1h&indicators=ema:20,rsi,macd`, `GET/POST/DELETE alerts` |
+| Signals | `GET signals`, `signals/history`, `signals/channels`; `POST/DELETE signals/channels/{id}/subscribe`; `POST signals/executions/{id}/approve` (I) / `reject` |
+| Bots | `GET/POST bots`, `GET/PUT/DELETE bots/{id}`, `POST bots/{id}/start\|stop`, `POST bots/signals/{id}/approve` (I) / `reject`, `GET/POST bots/backtests` |
+| Mining | `GET/POST mining/devices`, `GET/DELETE mining/devices/{id}`, `POST …/token`, `POST …/expenses`, `GET mining/statistics`, `mining/profitability`, `POST mining/pool-accounts`, `mining/earnings` |
+| Wallet | `GET wallet/balances`, `/transactions`, `POST wallet/paper/reset`, `GET/POST wallet/deposits` (I), `wallet/withdrawals` (I) |
+| Subscriptions | `GET subscriptions/plans` (public), `/current`, `/invoices`, `POST /checkout` (I), `/cancel` |
+| Machine endpoints | `POST mining/agent/stats` (device token), `POST signals/ingest/{channel}` (`X-Signal-Secret`), `POST /telegram/webhook/{bot}`, `POST /webhooks/stripe` |
 
 ## Scheduled jobs
 
 | Command | Schedule | Purpose |
 | --- | --- | --- |
-| `market:sync` | every minute | Public Binance spot prices (read-only) |
-| `trading:sync-orders` | every minute | Fill marketable paper limit orders / reconcile |
-| `subscriptions:expire` | hourly | Expire lapsed plans and revert roles |
-| `ledger:verify` | daily | Ledger and wallet reconciliation |
+| `market:sync` | minute | Public Binance spot prices; every tick also updates candles |
+| `trading:sync-orders` | minute | Fill marketable paper limit orders, reconcile live orders |
+| `alerts:check`, `signals:expire`, `bots:run` | minute | Alerts, signal expiry, bot evaluation |
+| `mining:profitability` | 15 min | Offline detection and daily profitability |
+| `bots:performance`, `subscriptions:expire`, `mining:sync-pools` | hourly | Snapshots, expiry, pool earnings |
+| `backup:database`, `ledger:verify`, `accounts:verify`, `subscriptions:renew` | daily | Backups, reconciliation, key checks, renewal invoices |
 
-Forex prices have no free provider wired yet; add a `MarketDataProvider` for your broker feed
-and register it in `AppServiceProvider`.
+## Operations
 
-## Roadmap status
-
-| Phase | Status |
-| --- | --- |
-| 1 Core platform | Done: auth, RBAC, dashboards, audit log |
-| 2 Subscriptions | Done: plans, entitlements, invoices, coupons, manual payments, expiry. Next: Stripe/crypto gateway + webhooks |
-| 3 Crypto & Forex | Framework done: adapters, paper trading, risk engine, ledger, positions. Next: execution bridge service, account verification, reconciliation before enabling live |
-| 4 Telegram signals | Schema ready |
-| 5 Chart analysis | Not started (TradingView Lightweight Charts) |
-| 6 Trading bots | Schema + strategy catalogue ready |
-| 7 Mining | Schema ready, dashboard widgets wired |
-| 8 Production | Not started |
+- `/up` liveness, `/health` readiness (database, cache, scheduler heartbeat, market-data age).
+- `/horizon` queue dashboard (permission `system.monitor`); the `trading` queue has its own
+  supervisor and its jobs are never retried automatically.
+- Deployment, go-live checklist and backups: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+  Security model and checklist: [docs/SECURITY.md](docs/SECURITY.md).
 
 Before offering live trading, custody or paid services, confirm the financial-services,
 brokerage, custody and AML/KYC requirements for each jurisdiction you operate in.

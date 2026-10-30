@@ -38,6 +38,17 @@ return [
             'report' => false,
         ],
 
+        // Database backups; use an off-site driver (e.g. s3) in production via BACKUP_DISK_DRIVER.
+        'backups' => [
+            'driver' => env('BACKUP_DISK_DRIVER', 'local'),
+            'root' => storage_path('backups'),
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('BACKUP_BUCKET'),
+            'throw' => true,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

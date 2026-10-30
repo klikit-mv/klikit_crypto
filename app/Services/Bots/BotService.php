@@ -252,7 +252,7 @@ class BotService
             $order = $this->engine->submit(OrderIntent::fromArray($bot->user, $bot->symbol, [
                 'side' => $signal->side,
                 'type' => 'market',
-                'quantity' => (string) Decimal::of($signal->quantity)->stripTrailingZeros(),
+                'quantity' => (string) Decimal::of($signal->quantity)->strippedOfTrailingZeros(),
                 'mode' => $bot->mode,
             ], 'bot'), "bot-signal-{$signal->id}");
 

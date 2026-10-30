@@ -43,6 +43,6 @@ class LedgerServiceTest extends TestCase
             ['account' => $fees, 'credit' => '10'],
         ]);
 
-        $this->assertSame('10', (string) $ledger->balanceFromEntries($fees)->stripTrailingZeros());
+        $this->assertSame('10', (string) $ledger->balanceFromEntries($fees)->strippedOfTrailingZeros());
     }
 }

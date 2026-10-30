@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HealthController;
 use App\Modules\Auth\Http\Controllers\Web\SessionController;
 use App\Modules\ChartAnalysis\Http\Controllers\ChartController;
 use App\Modules\Dashboard\Http\Controllers\Web\DashboardController;
@@ -88,3 +89,5 @@ Route::post('telegram/webhook/{bot}', [TelegramWebhookController::class, 'telegr
 Route::post('webhooks/stripe', StripeWebhookController::class)
     ->withoutMiddleware(ValidateCsrfToken::class)
     ->name('webhooks.stripe');
+
+Route::get('health', HealthController::class)->name('health');
