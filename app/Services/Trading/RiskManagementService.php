@@ -2,6 +2,8 @@
 
 namespace App\Services\Trading;
 
+use App\Models\BrokerAccount;
+use App\Models\ExchangeAccount;
 use App\Models\Position;
 use App\Models\RiskProfile;
 use App\Models\Trade;
@@ -47,6 +49,11 @@ class RiskManagementService
         if ($intent->mode === 'live') {
             $this->check((bool) config('trading.live_trading_enabled'), 'live_disabled', 'Live trading is not enabled on this platform.');
             $this->check($this->subscriptions->hasFeature($user, 'trading.manual'), 'plan_required', 'Your plan does not include live trading.');
+            $account = $symbol->usesBroker()
+                ? BrokerAccount::where('user_id', $user->id)->find($intent->brokerAccountId)
+                : ExchangeAccount::where('user_id', $user->id)->find($intent->exchangeAccountId);
+            $this->check($account !== null, 'account_required', 'Choose a connected '.($symbol->usesBroker() ? 'broker' : 'exchange').' account for live orders.');
+            $this->check($account->status === 'verified' && $account->permissions_scope === 'trade', 'account_not_tradable', 'The selected account is not verified for trading.');
         } else {
             $this->check($this->subscriptions->hasFeature($user, 'trading.paper'), 'plan_required', 'Your plan does not include paper trading.');
         }

@@ -1,0 +1,16 @@
+{
+  "name": "klikit-execution-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stateless CCXT execution service used by the Laravel trading platform for live crypto orders.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "ccxt": "4.4.40"
+  }
+}

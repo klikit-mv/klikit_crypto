@@ -21,6 +21,7 @@ class SubscriptionController extends Controller
             'current' => $subscriptions->current($request->user()),
             'invoices' => $request->user()->invoices()->with('payments')->latest()->limit(20)->get(),
             'featureLabels' => config('plans.features'),
+            'providers' => app(PaymentService::class)->providers(),
         ]);
     }
 
@@ -29,10 +30,15 @@ class SubscriptionController extends Controller
         $data = $request->validate([
             'plan_id' => ['required', Rule::exists('subscription_plans', 'id')->where('is_active', true)],
             'coupon' => ['nullable', 'string', 'max:50'],
+            'provider' => ['nullable', Rule::in($payments->providers())],
         ]);
         $invoice = $subscriptions->checkout($request->user(), SubscriptionPlan::findOrFail($data['plan_id']), $data['coupon'] ?? null);
         if ($invoice->status !== 'paid') {
-            $payments->initiate($invoice, 'manual');
+            $payment = $payments->initiate($invoice, $data['provider'] ?? 'manual');
+            $url = $payments->gateway($payment->provider)->instructions($payment)['url'] ?? null;
+            if ($url) {
+                return redirect()->away($url);
+            }
         }
 
         return redirect()->route('subscription.invoice', $invoice);
@@ -41,7 +47,10 @@ class SubscriptionController extends Controller
     public function invoice(Request $request, Invoice $invoice, PaymentService $payments): View
     {
         abort_unless($invoice->user_id === $request->user()->id, 404);
-        $payment = $invoice->payments()->latest()->first();
+        $payment = $invoice->payments()->latest('id')->first();
+        if ($invoice->status === 'open' && $payment === null) {
+            $payment = $payments->initiate($invoice, 'manual'); // e.g. renewal invoices
+        }
 
         return view('user.invoice', [
             'invoice' => $invoice,

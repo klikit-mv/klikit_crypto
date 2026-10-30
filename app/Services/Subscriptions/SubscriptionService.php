@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Notifications\RenewalInvoiceIssued;
 use App\Services\Access\AuditLogger;
 use App\Support\Decimal;
 use Brick\Math\RoundingMode;
@@ -137,7 +138,7 @@ class SubscriptionService
 
             if ($active && $active->plan_id === $subscription->plan_id && $active->id !== $subscription->id) {
                 // Renewal of the same plan: extend from the current expiry.
-                $active->update(['expires_at' => $active->expires_at->copy()->add($subscription->plan->periodInterval())]);
+                $active->update(['expires_at' => $active->expires_at->copy()->add($subscription->plan->periodInterval()), 'renewal_invoiced_at' => null]);
                 $subscription->update(['status' => Subscription::CANCELLED, 'cancelled_at' => now()]);
                 $subscription = $active;
             } else {
@@ -165,6 +166,30 @@ class SubscriptionService
         // Access continues until the paid period ends; only auto-renewal stops.
         $subscription->update(['auto_renew' => false, 'cancelled_at' => now()]);
         $this->audit->log('subscription.cancelled', $subscription->user, $subscription);
+    }
+
+    /**
+     * Issue renewal invoices for auto-renewing subscriptions expiring within $days days.
+     * Paying the invoice extends the current period (see markInvoicePaid()).
+     */
+    public function issueRenewalInvoices(int $days = 3): int
+    {
+        $count = 0;
+        Subscription::where('status', Subscription::ACTIVE)->where('auto_renew', true)->whereNull('cancelled_at')
+            ->whereNull('renewal_invoiced_at')->whereBetween('expires_at', [now(), now()->addDays($days)])
+            ->with('user', 'plan')->chunkById(200, function ($subscriptions) use (&$count) {
+                foreach ($subscriptions as $subscription) {
+                    if (! $subscription->plan->is_active) {
+                        continue;
+                    }
+                    $invoice = $this->checkout($subscription->user, $subscription->plan);
+                    $subscription->update(['renewal_invoiced_at' => now()]);
+                    $subscription->user->notify(new RenewalInvoiceIssued($invoice));
+                    $count++;
+                }
+            });
+
+        return $count;
     }
 
     /** Expire lapsed subscriptions. Returns the number expired. */

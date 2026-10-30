@@ -8,6 +8,7 @@ use App\Models\BrokerAccount;
 use App\Models\Exchange;
 use App\Models\ExchangeAccount;
 use App\Services\Access\AuditLogger;
+use App\Services\Trading\VenueAccountService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -94,6 +95,20 @@ class VenueAccountController extends Controller
         return response()->json(['message' => 'Broker account disconnected.']);
     }
 
+    public function verifyExchange(Request $request, ExchangeAccount $account, VenueAccountService $service): JsonResponse
+    {
+        abort_unless($account->user_id === $request->user()->id && $account->status !== 'revoked', 404);
+
+        return response()->json(['data' => $this->present($service->verify($account->load('exchange')), $account->exchange)]);
+    }
+
+    public function verifyBroker(Request $request, BrokerAccount $account, VenueAccountService $service): JsonResponse
+    {
+        abort_unless($account->user_id === $request->user()->id && $account->status !== 'revoked', 404);
+
+        return response()->json(['data' => $this->present($service->verify($account->load('broker')), $account->broker)]);
+    }
+
     private function present(ExchangeAccount|BrokerAccount $account, $venue): array
     {
         return [
@@ -103,6 +118,7 @@ class VenueAccountController extends Controller
             'key' => $account->maskedKey(),
             'permissions_scope' => $account->permissions_scope,
             'status' => $account->status,
+            'status_reason' => $account->status_reason,
             'last_verified_at' => $account->last_verified_at,
         ];
     }

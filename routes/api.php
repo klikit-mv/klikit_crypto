@@ -107,6 +107,8 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function ()
     Route::get('accounts', [VenueAccountController::class, 'index']);
     Route::post('accounts/exchanges', [VenueAccountController::class, 'storeExchange']);
     Route::post('accounts/brokers', [VenueAccountController::class, 'storeBroker']);
+    Route::post('accounts/exchanges/{account}/verify', [VenueAccountController::class, 'verifyExchange'])->middleware('throttle:10,1');
+    Route::post('accounts/brokers/{account}/verify', [VenueAccountController::class, 'verifyBroker'])->middleware('throttle:10,1');
     Route::delete('accounts/exchanges/{account}', [VenueAccountController::class, 'destroyExchange']);
     Route::delete('accounts/brokers/{account}', [VenueAccountController::class, 'destroyBroker']);
 

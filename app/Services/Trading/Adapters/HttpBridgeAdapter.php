@@ -19,7 +19,7 @@ use Throwable;
  * Talks to the separate execution service over HTTP. The bridge holds no long-term state
  * about users: credentials are decrypted here and sent per request over a private network.
  *
- * Bridge API (JSON): POST /ticker, /orders, /orders/sync, /orders/cancel, /positions/close, /balances
+ * Bridge API (JSON): POST /ticker, /orders, /orders/sync, /orders/cancel, /positions/close, /balances, /verify
  */
 abstract class HttpBridgeAdapter implements TradingVenueAdapter
 {
@@ -88,6 +88,14 @@ abstract class HttpBridgeAdapter implements TradingVenueAdapter
         ]);
 
         return $this->toFill($data);
+    }
+
+    /**
+     * Read-only account check: {"ok": true, "can_trade": bool, "can_withdraw": bool|null, "balances": {...}}.
+     */
+    public function verify(): array
+    {
+        return $this->call('/verify');
     }
 
     public function balances(): array

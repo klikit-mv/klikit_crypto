@@ -15,6 +15,11 @@ class SyncOpenOrdersCommand extends Command
 
     public function handle(TradingEngineService $engine): int
     {
+        // Live orders whose execution job died after the venue call may sit in "pending":
+        // reconcile them by client order id instead of resubmitting.
+        Order::where('status', Order::PENDING)->where('mode', 'live')->where('updated_at', '<', now()->subMinutes(5))
+            ->update(['status' => Order::OPEN]);
+
         $filled = 0;
         Order::whereIn('status', [Order::OPEN, Order::PARTIALLY_FILLED])->with('symbol', 'user')->chunkById(200, function ($orders) use ($engine, &$filled) {
             foreach ($orders as $order) {

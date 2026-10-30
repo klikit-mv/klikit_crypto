@@ -7,6 +7,7 @@ use App\Services\Access\AuditLogger;
 use App\Services\Analysis\CandleService;
 use App\Services\Payments\ManualPaymentGateway;
 use App\Services\Payments\PaymentService;
+use App\Services\Payments\StripePaymentGateway;
 use App\Services\Subscriptions\SubscriptionService;
 use App\Services\Trading\MarketData\BinancePublicMarketData;
 use App\Services\Trading\MarketData\MarketDataService;
@@ -32,7 +33,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PaymentService::class, fn ($app) => new PaymentService(
             $app->make(SubscriptionService::class),
             $app->make(AuditLogger::class),
-            $app->make(ManualPaymentGateway::class),
+            ...array_filter([
+                $app->make(ManualPaymentGateway::class),
+                StripePaymentGateway::configured() ? $app->make(StripePaymentGateway::class) : null,
+            ]),
         ));
     }
 

@@ -23,7 +23,8 @@
             </ul>
             <form method="post" action="{{ route('subscription.checkout') }}">@csrf
                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
-                <div class="input-group input-group-sm mb-2"><input name="coupon" class="form-control" placeholder="Coupon code"></div>
+                <div class="input-group input-group-sm mb-2"><input name="coupon" class="form-control" placeholder="Coupon code">
+                    @if(count($providers) > 1)<select name="provider" class="form-select" style="max-width:9rem">@foreach($providers as $p)<option value="{{ $p }}">{{ $p === 'stripe' ? 'Card' : 'Bank transfer' }}</option>@endforeach</select>@endif</div>
                 <button class="btn btn-primary w-100">{{ $current?->plan_id === $plan->id ? 'Renew' : 'Choose '.$plan->name }}</button>
             </form>
         </div></div></div>

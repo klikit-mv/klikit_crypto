@@ -15,6 +15,7 @@ class ExchangeAccount extends Model
         'permissions_scope',
         'status',
         'last_verified_at',
+        'status_reason',
     ];
 
     protected $hidden = ['encrypted_credentials'];

@@ -6,6 +6,7 @@ use App\Modules\Dashboard\Http\Controllers\Web\DashboardController;
 use App\Modules\Mining\Http\Controllers\MiningController;
 use App\Modules\Signals\Http\Controllers\SignalController;
 use App\Modules\Signals\Http\Controllers\TelegramWebhookController;
+use App\Modules\Subscriptions\Http\Controllers\StripeWebhookController;
 use App\Modules\Subscriptions\Http\Controllers\Web\SubscriptionController;
 use App\Modules\Trading\Http\Controllers\Web\TradingController;
 use App\Modules\TradingBots\Http\Controllers\BotController;
@@ -83,3 +84,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 Route::post('telegram/webhook/{bot}', [TelegramWebhookController::class, 'telegram'])
     ->withoutMiddleware(ValidateCsrfToken::class)
     ->name('telegram.webhook');
+
+Route::post('webhooks/stripe', StripeWebhookController::class)
+    ->withoutMiddleware(ValidateCsrfToken::class)
+    ->name('webhooks.stripe');

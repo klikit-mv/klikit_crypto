@@ -12,3 +12,5 @@ Schedule::command('bots:run')->everyMinute()->withoutOverlapping();
 Schedule::command('bots:performance')->hourly();
 Schedule::command('mining:sync-pools')->hourly()->withoutOverlapping();
 Schedule::command('mining:profitability')->everyFifteenMinutes()->withoutOverlapping();
+Schedule::command('subscriptions:renew')->dailyAt('06:10');
+Schedule::command('accounts:verify')->dailyAt('03:20');
