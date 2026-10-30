@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Auth\Http\Controllers\Api\AuthController;
+use App\Modules\ChartAnalysis\Http\Controllers\ChartController;
 use App\Modules\Dashboard\Http\Controllers\Api\DashboardController;
 use App\Modules\Subscriptions\Http\Controllers\Api\SubscriptionController;
 use App\Modules\Trading\Http\Controllers\Api\MarketController;
@@ -9,6 +10,7 @@ use App\Modules\Trading\Http\Controllers\Api\PositionController;
 use App\Modules\Trading\Http\Controllers\Api\RiskProfileController;
 use App\Modules\Trading\Http\Controllers\Api\VenueAccountController;
 use App\Modules\Wallet\Http\Controllers\Api\WalletController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,6 +44,12 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function ()
         Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->middleware('idempotent');
         Route::get('trades', [OrderController::class, 'trades']);
     });
+
+    Route::get('charts/{symbol}', [ChartController::class, 'data']);
+    Route::get('alerts', [ChartController::class, 'alerts']);
+    Route::post('alerts', [ChartController::class, 'storeAlert']);
+    Route::delete('alerts/{alert}', [ChartController::class, 'destroyAlert']);
+    Route::get('notifications', fn (Request $r) => $r->user()->notifications()->latest()->paginate(25));
 
     Route::get('positions', [PositionController::class, 'index']);
     Route::post('positions/{position}/close', [PositionController::class, 'close'])->middleware('idempotent');

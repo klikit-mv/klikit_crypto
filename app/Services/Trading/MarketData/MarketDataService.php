@@ -4,6 +4,7 @@ namespace App\Services\Trading\MarketData;
 
 use App\Models\MarketPrice;
 use App\Models\TradingSymbol;
+use App\Services\Analysis\CandleService;
 use App\Services\Trading\Contracts\MarketDataProvider;
 use App\Services\Trading\Data\Ticker;
 use App\Services\Trading\Exceptions\AdapterException;
@@ -18,7 +19,7 @@ class MarketDataService
     /** @var list<MarketDataProvider> */
     private array $providers;
 
-    public function __construct(MarketDataProvider ...$providers)
+    public function __construct(private readonly CandleService $candles, MarketDataProvider ...$providers)
     {
         $this->providers = $providers;
     }
@@ -62,6 +63,8 @@ class MarketDataService
 
     public function store(int $symbolId, Ticker $ticker, string $source): MarketPrice
     {
+        $this->candles->recordTick($symbolId, $ticker->last);
+
         return MarketPrice::create([
             'symbol_id' => $symbolId,
             'source' => $source,

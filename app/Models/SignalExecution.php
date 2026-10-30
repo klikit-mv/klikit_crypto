@@ -12,6 +12,7 @@ class SignalExecution extends Model
         'user_id',
         'order_id',
         'status',
+        'reason',
     ];
 
     public function signal(): BelongsTo

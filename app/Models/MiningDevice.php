@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MiningDevice extends Model
 {
+    protected $hidden = ['agent_token_hash'];
+
     protected $fillable = [
         'user_id',
         'pool_id',
@@ -17,11 +19,14 @@ class MiningDevice extends Model
         'power_watts',
         'electricity_rate',
         'status',
+        'agent_token_hash',
+        'last_seen_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'last_seen_at' => 'datetime',
             'electricity_rate' => 'decimal:6',
         ];
     }

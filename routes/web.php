@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Auth\Http\Controllers\Web\SessionController;
+use App\Modules\ChartAnalysis\Http\Controllers\ChartController;
 use App\Modules\Dashboard\Http\Controllers\Web\DashboardController;
 use App\Modules\Subscriptions\Http\Controllers\Web\SubscriptionController;
 use App\Modules\Trading\Http\Controllers\Web\TradingController;
@@ -31,6 +32,12 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('wallet/paper/reset', [WalletController::class, 'resetPaper'])->name('wallet.paper.reset');
     Route::post('wallet/deposits', [WalletController::class, 'deposit'])->name('wallet.deposit');
     Route::post('wallet/withdrawals', [WalletController::class, 'withdraw'])->name('wallet.withdraw');
+
+    Route::get('charts', [ChartController::class, 'page'])->name('charts.index');
+    Route::get('charts/data', [ChartController::class, 'data'])->name('charts.data');
+    Route::post('charts/alerts', [ChartController::class, 'storeAlert'])->name('charts.alerts.store');
+    Route::delete('charts/alerts/{alert}', [ChartController::class, 'destroyAlert'])->name('charts.alerts.destroy');
+    Route::post('notifications/read', [ChartController::class, 'markNotificationsRead'])->name('notifications.read');
 
     Route::get('subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('subscription/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');

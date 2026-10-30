@@ -17,7 +17,18 @@ class TradingBot extends Model
         'mode',
         'execution_mode',
         'status',
+        'state',
+        'last_run_at',
+        'last_error',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'state' => 'array',
+            'last_run_at' => 'datetime',
+        ];
+    }
 
     public function user(): BelongsTo
     {
@@ -47,5 +58,20 @@ class TradingBot extends Model
     public function performance(): HasMany
     {
         return $this->hasMany(BotPerformance::class, 'bot_id');
+    }
+
+    public function signals(): HasMany
+    {
+        return $this->hasMany(BotSignal::class, 'bot_id');
+    }
+
+    public function botOrders(): HasMany
+    {
+        return $this->hasMany(BotOrder::class, 'bot_id');
+    }
+
+    public function currentConfiguration(): ?BotConfiguration
+    {
+        return $this->configurations()->latest('version')->first();
     }
 }

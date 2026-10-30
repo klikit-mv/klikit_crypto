@@ -19,11 +19,17 @@ class TelegramSignal extends Model
         'status',
         'rejection_reason',
         'received_at',
+        'message_id',
+        'market_type',
+        'leverage',
+        'expires_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'leverage' => 'decimal:2',
+            'expires_at' => 'datetime',
             'entry_price' => 'decimal:18',
             'entry_price_max' => 'decimal:18',
             'stop_loss' => 'decimal:18',

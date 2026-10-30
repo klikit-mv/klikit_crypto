@@ -13,6 +13,7 @@ class MiningEarning extends Model
         'amount',
         'currency',
         'date',
+        'external_id',
     ];
 
     protected function casts(): array

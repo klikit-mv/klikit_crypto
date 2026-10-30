@@ -25,11 +25,13 @@ class Subscription extends Model
         'expires_at',
         'cancelled_at',
         'auto_renew',
+        'renewal_invoiced_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'renewal_invoiced_at' => 'datetime',
             'starts_at' => 'datetime',
             'expires_at' => 'datetime',
             'cancelled_at' => 'datetime',

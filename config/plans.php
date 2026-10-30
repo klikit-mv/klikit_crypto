@@ -18,6 +18,7 @@ return [
         'bots.max' => 'Maximum active bots',
         'analytics.advanced' => 'Advanced analytics',
         'mining.management' => 'Mining management',
+        'alerts.max' => 'Active price alerts',
     ],
 
     // Entitlements for users without an active subscription.
@@ -25,6 +26,7 @@ return [
         'trading.paper' => 'true',
         'signals.daily_limit' => '0',
         'bots.max' => '0',
+        'alerts.max' => '3',
     ],
 
     // Seeded plans (illustrative pricing).
@@ -33,7 +35,7 @@ return [
             'name' => 'Starter', 'price' => '19', 'sort_order' => 1, 'is_featured' => false,
             'description' => 'Manual trading, basic charts and limited signals.',
             'features' => [
-                'trading.paper' => 'true', 'trading.manual' => 'true', 'signals.daily_limit' => '5', 'bots.max' => '0',
+                'trading.paper' => 'true', 'trading.manual' => 'true', 'signals.daily_limit' => '5', 'bots.max' => '0', 'alerts.max' => '10',
             ],
         ],
         'pro' => [
@@ -42,6 +44,7 @@ return [
             'features' => [
                 'trading.paper' => 'true', 'trading.manual' => 'true', 'charts.advanced' => 'true',
                 'signals.telegram' => 'true', 'signals.daily_limit' => '50', 'bots.automated' => 'true', 'bots.max' => '3',
+                'alerts.max' => '50',
             ],
         ],
         'enterprise' => [
@@ -50,7 +53,7 @@ return [
             'features' => [
                 'trading.paper' => 'true', 'trading.manual' => 'true', 'charts.advanced' => 'true',
                 'signals.telegram' => 'true', 'signals.daily_limit' => '-1', 'bots.automated' => 'true', 'bots.max' => '20',
-                'analytics.advanced' => 'true', 'mining.management' => 'true',
+                'analytics.advanced' => 'true', 'mining.management' => 'true', 'alerts.max' => '-1',
             ],
         ],
     ],

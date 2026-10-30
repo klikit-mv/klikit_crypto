@@ -15,6 +15,8 @@ class TelegramChannel extends Model
         'channel_name',
         'parser_format',
         'is_active',
+        'webhook_secret',
+        'signal_ttl_minutes',
     ];
 
     protected function casts(): array
@@ -32,5 +34,10 @@ class TelegramChannel extends Model
     public function signals(): HasMany
     {
         return $this->hasMany(TelegramSignal::class, 'channel_id');
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(SignalSubscription::class, 'channel_id');
     }
 }

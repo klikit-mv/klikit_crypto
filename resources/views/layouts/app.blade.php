@@ -41,6 +41,7 @@
                 @else
                     <li><a class="nav-link @if(request()->routeIs('dashboard')) active @endif" href="{{ route('dashboard') }}">Dashboard</a></li>
                     <li><a class="nav-link @if(request()->routeIs('trading.index')) active @endif" href="{{ route('trading.index') }}">Trading</a></li>
+                    <li><a class="nav-link @if(request()->routeIs('charts.*')) active @endif" href="{{ route('charts.index') }}">Charts &amp; alerts</a></li>
                     <li><a class="nav-link @if(request()->routeIs('trading.risk')) active @endif" href="{{ route('trading.risk') }}">Risk settings</a></li>
                     <li><a class="nav-link @if(request()->routeIs('wallet.*')) active @endif" href="{{ route('wallet.index') }}">Wallet</a></li>
                     <li><a class="nav-link @if(request()->routeIs('subscription.*')) active @endif" href="{{ route('subscription.index') }}">Subscription</a></li>

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Services\Access\AuditLogger;
+use App\Services\Analysis\CandleService;
 use App\Services\Payments\ManualPaymentGateway;
 use App\Services\Payments\PaymentService;
 use App\Services\Subscriptions\SubscriptionService;
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(AuditLogger::class, fn ($app) => new AuditLogger($app->bound('request') ? $app['request'] : null));
 
         $this->app->singleton(MarketDataService::class, fn ($app) => new MarketDataService(
+            $app->make(CandleService::class),
             $app->make(BinancePublicMarketData::class),
         ));
 
