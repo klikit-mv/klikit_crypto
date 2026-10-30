@@ -3,9 +3,12 @@
 use App\Modules\Auth\Http\Controllers\Web\SessionController;
 use App\Modules\ChartAnalysis\Http\Controllers\ChartController;
 use App\Modules\Dashboard\Http\Controllers\Web\DashboardController;
+use App\Modules\Signals\Http\Controllers\SignalController;
+use App\Modules\Signals\Http\Controllers\TelegramWebhookController;
 use App\Modules\Subscriptions\Http\Controllers\Web\SubscriptionController;
 use App\Modules\Trading\Http\Controllers\Web\TradingController;
 use App\Modules\Wallet\Http\Controllers\Web\WalletController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -39,8 +42,19 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::delete('charts/alerts/{alert}', [ChartController::class, 'destroyAlert'])->name('charts.alerts.destroy');
     Route::post('notifications/read', [ChartController::class, 'markNotificationsRead'])->name('notifications.read');
 
+    Route::get('signals', [SignalController::class, 'page'])->name('signals.index');
+    Route::post('signals/channels/{channel}/subscribe', [SignalController::class, 'subscribe'])->name('signals.subscribe');
+    Route::delete('signals/channels/{channel}/subscribe', [SignalController::class, 'unsubscribe'])->name('signals.unsubscribe');
+    Route::post('signals/executions/{execution}/approve', [SignalController::class, 'approve'])->name('signals.approve');
+    Route::post('signals/executions/{execution}/reject', [SignalController::class, 'reject'])->name('signals.reject');
+
     Route::get('subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('subscription/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');
     Route::get('subscription/invoices/{invoice}', [SubscriptionController::class, 'invoice'])->name('subscription.invoice');
     Route::post('subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
 });
+
+// Telegram Bot API webhook (authenticated by the secret token Telegram echoes back).
+Route::post('telegram/webhook/{bot}', [TelegramWebhookController::class, 'telegram'])
+    ->withoutMiddleware(ValidateCsrfToken::class)
+    ->name('telegram.webhook');

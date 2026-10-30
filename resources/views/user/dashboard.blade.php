@@ -59,7 +59,7 @@
         <div class="card mb-3"><div class="card-header">Telegram signals</div><div class="card-body small">
             @forelse($overview['signals'] as $s)
                 <div>{{ $s->symbol }} <span class="text-{{ $s->signal_type }}">{{ strtoupper($s->signal_type) }}</span> — {{ $s->status }}</div>
-            @empty<span class="text-secondary">Signal integration arrives in Phase 4.</span>@endforelse
+            @empty<span class="text-secondary">No signals yet. <a href="{{ route('signals.index') }}">Subscribe to a channel</a>.</span>@endforelse
         </div></div>
         <div class="card"><div class="card-header">Mining (30 days)</div><div class="card-body small">
             @forelse($overview['mining']['earnings_30d'] as $currency => $amount)

@@ -3,6 +3,8 @@
 use App\Modules\Auth\Http\Controllers\Api\AuthController;
 use App\Modules\ChartAnalysis\Http\Controllers\ChartController;
 use App\Modules\Dashboard\Http\Controllers\Api\DashboardController;
+use App\Modules\Signals\Http\Controllers\SignalController;
+use App\Modules\Signals\Http\Controllers\TelegramWebhookController;
 use App\Modules\Subscriptions\Http\Controllers\Api\SubscriptionController;
 use App\Modules\Trading\Http\Controllers\Api\MarketController;
 use App\Modules\Trading\Http\Controllers\Api\OrderController;
@@ -24,6 +26,7 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
 });
 
 Route::get('subscriptions/plans', [SubscriptionController::class, 'plans']);
+Route::post('signals/ingest/{channel}', [TelegramWebhookController::class, 'ingest'])->middleware('throttle:120,1');
 
 Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']);
@@ -50,6 +53,16 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function ()
     Route::post('alerts', [ChartController::class, 'storeAlert']);
     Route::delete('alerts/{alert}', [ChartController::class, 'destroyAlert']);
     Route::get('notifications', fn (Request $r) => $r->user()->notifications()->latest()->paginate(25));
+
+    Route::prefix('signals')->group(function () {
+        Route::get('/', [SignalController::class, 'list']);
+        Route::get('history', [SignalController::class, 'history']);
+        Route::get('channels', [SignalController::class, 'channels']);
+        Route::post('channels/{channel}/subscribe', [SignalController::class, 'subscribe']);
+        Route::delete('channels/{channel}/subscribe', [SignalController::class, 'unsubscribe']);
+        Route::post('executions/{execution}/approve', [SignalController::class, 'approve'])->middleware('idempotent');
+        Route::post('executions/{execution}/reject', [SignalController::class, 'reject']);
+    });
 
     Route::get('positions', [PositionController::class, 'index']);
     Route::post('positions/{position}/close', [PositionController::class, 'close'])->middleware('idempotent');

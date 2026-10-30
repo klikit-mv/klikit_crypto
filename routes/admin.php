@@ -7,6 +7,7 @@ use App\Modules\Administration\Http\Controllers\SystemController;
 use App\Modules\Administration\Http\Controllers\TradingAdminController;
 use App\Modules\Administration\Http\Controllers\UserController;
 use App\Modules\Administration\Http\Controllers\WalletReviewController;
+use App\Modules\Signals\Http\Controllers\TelegramAdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,3 +44,8 @@ Route::get('failed-jobs', [SystemController::class, 'failedJobs'])->name('jobs')
 Route::get('announcements', [SystemController::class, 'announcements'])->name('announcements.index');
 Route::post('announcements', [SystemController::class, 'storeAnnouncement'])->name('announcements.store');
 Route::delete('announcements/{announcement}', [SystemController::class, 'destroyAnnouncement'])->name('announcements.destroy');
+
+Route::get('telegram', [TelegramAdminController::class, 'index'])->name('telegram.index');
+Route::post('telegram/bots', [TelegramAdminController::class, 'storeBot'])->name('telegram.bots.store');
+Route::post('telegram/channels', [TelegramAdminController::class, 'storeChannel'])->name('telegram.channels.store');
+Route::post('telegram/channels/{channel}/toggle', [TelegramAdminController::class, 'toggleChannel'])->name('telegram.channels.toggle');

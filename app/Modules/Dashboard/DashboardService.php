@@ -6,6 +6,7 @@ use App\Models\Announcement;
 use App\Models\MiningEarning;
 use App\Models\MiningExpense;
 use App\Models\Order;
+use App\Models\SignalSubscription;
 use App\Models\TelegramSignal;
 use App\Models\TradingBot;
 use App\Models\TradingSymbol;
@@ -42,7 +43,7 @@ class DashboardService
                 'expenses_30d' => Decimal::display(MiningExpense::whereHas('device', fn ($q) => $q->where('user_id', $user->id))->where('date', '>=', $since)->get()
                     ->reduce(fn ($s, $e) => $s->plus(Decimal::of($e->electricity_cost))->plus(Decimal::of($e->pool_fees))->plus(Decimal::of($e->other_costs)), Decimal::of(0)), 2),
             ],
-            'signals' => TelegramSignal::whereHas('channel', fn ($q) => $q->where('user_id', $user->id))->latest('received_at')->limit(5)
+            'signals' => TelegramSignal::whereIn('channel_id', SignalSubscription::where('user_id', $user->id)->pluck('channel_id'))->latest('received_at')->limit(5)
                 ->get(['id', 'symbol', 'signal_type', 'entry_price', 'status', 'received_at']),
             'market' => TradingSymbol::active()->with('latestPrice')->orderBy('market_type')->orderBy('symbol')->limit(12)->get()
                 ->map(fn (TradingSymbol $s) => [
