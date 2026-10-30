@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             SubscriptionPlanSeeder::class,
             MarketSeeder::class,
             BotStrategySeeder::class,
+            MiningPoolSeeder::class,
         ]);
 
         // Demo accounts for local development only. In production create admins with

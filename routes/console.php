@@ -10,3 +10,5 @@ Schedule::command('alerts:check')->everyMinute()->withoutOverlapping();
 Schedule::command('signals:expire')->everyMinute();
 Schedule::command('bots:run')->everyMinute()->withoutOverlapping();
 Schedule::command('bots:performance')->hourly();
+Schedule::command('mining:sync-pools')->hourly()->withoutOverlapping();
+Schedule::command('mining:profitability')->everyFifteenMinutes()->withoutOverlapping();

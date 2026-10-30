@@ -3,6 +3,7 @@
 use App\Modules\Auth\Http\Controllers\Web\SessionController;
 use App\Modules\ChartAnalysis\Http\Controllers\ChartController;
 use App\Modules\Dashboard\Http\Controllers\Web\DashboardController;
+use App\Modules\Mining\Http\Controllers\MiningController;
 use App\Modules\Signals\Http\Controllers\SignalController;
 use App\Modules\Signals\Http\Controllers\TelegramWebhookController;
 use App\Modules\Subscriptions\Http\Controllers\Web\SubscriptionController;
@@ -60,6 +61,17 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::delete('bots/{bot}', [BotController::class, 'destroy'])->name('bots.destroy');
     Route::post('bot-signals/{signal}/approve', [BotController::class, 'approveSignal'])->name('bots.signals.approve');
     Route::post('bot-signals/{signal}/reject', [BotController::class, 'rejectSignal'])->name('bots.signals.reject');
+
+    Route::middleware('feature:mining.management')->prefix('mining')->name('mining.')->group(function () {
+        Route::get('/', [MiningController::class, 'index'])->name('index');
+        Route::post('devices', [MiningController::class, 'storeDevice'])->name('devices.store');
+        Route::get('devices/{device}', [MiningController::class, 'showDevice'])->name('devices.show');
+        Route::post('devices/{device}/token', [MiningController::class, 'rotateToken'])->name('devices.token');
+        Route::post('devices/{device}/expenses', [MiningController::class, 'storeExpense'])->name('devices.expenses');
+        Route::delete('devices/{device}', [MiningController::class, 'destroyDevice'])->name('devices.destroy');
+        Route::post('pool-accounts', [MiningController::class, 'storePoolAccount'])->name('pool-accounts.store');
+        Route::post('earnings', [MiningController::class, 'storeEarning'])->name('earnings.store');
+    });
 
     Route::get('subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('subscription/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');

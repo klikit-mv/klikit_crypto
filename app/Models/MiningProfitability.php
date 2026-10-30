@@ -9,6 +9,7 @@ class MiningProfitability extends Model
 {
     protected $table = 'mining_profitability';
 
+    /** Calendar dates are stored as plain Y-m-d strings so equality lookups work on every driver. */
     protected $fillable = [
         'device_id',
         'date',
@@ -24,7 +25,6 @@ class MiningProfitability extends Model
             'revenue' => 'decimal:8',
             'expenses' => 'decimal:8',
             'net_profit' => 'decimal:8',
-            'date' => 'date',
         ];
     }
 

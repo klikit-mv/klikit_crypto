@@ -3,6 +3,8 @@
 use App\Modules\Auth\Http\Controllers\Api\AuthController;
 use App\Modules\ChartAnalysis\Http\Controllers\ChartController;
 use App\Modules\Dashboard\Http\Controllers\Api\DashboardController;
+use App\Modules\Mining\Http\Controllers\MiningAgentController;
+use App\Modules\Mining\Http\Controllers\MiningController;
 use App\Modules\Signals\Http\Controllers\SignalController;
 use App\Modules\Signals\Http\Controllers\TelegramWebhookController;
 use App\Modules\Subscriptions\Http\Controllers\Api\SubscriptionController;
@@ -27,6 +29,7 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
 });
 
 Route::get('subscriptions/plans', [SubscriptionController::class, 'plans']);
+Route::post('mining/agent/stats', [MiningAgentController::class, 'stats'])->middleware('throttle:60,1');
 Route::post('signals/ingest/{channel}', [TelegramWebhookController::class, 'ingest'])->middleware('throttle:120,1');
 
 Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function () {
@@ -78,6 +81,20 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function ()
         Route::delete('{bot}', [BotController::class, 'destroy']);
         Route::post('signals/{signal}/approve', [BotController::class, 'approveSignal'])->middleware('idempotent');
         Route::post('signals/{signal}/reject', [BotController::class, 'rejectSignal']);
+    });
+
+    Route::middleware('feature:mining.management')->prefix('mining')->group(function () {
+        Route::get('devices', [MiningController::class, 'index']);
+        Route::post('devices', [MiningController::class, 'storeDevice']);
+        Route::get('devices/{device}', [MiningController::class, 'showDevice']);
+        Route::post('devices/{device}/token', [MiningController::class, 'rotateToken']);
+        Route::post('devices/{device}/expenses', [MiningController::class, 'storeExpense']);
+        Route::delete('devices/{device}', [MiningController::class, 'destroyDevice']);
+        Route::get('workers', [MiningController::class, 'statistics']);
+        Route::get('statistics', [MiningController::class, 'statistics']);
+        Route::get('profitability', [MiningController::class, 'index']);
+        Route::post('pool-accounts', [MiningController::class, 'storePoolAccount']);
+        Route::post('earnings', [MiningController::class, 'storeEarning']);
     });
 
     Route::get('positions', [PositionController::class, 'index']);

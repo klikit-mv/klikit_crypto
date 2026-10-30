@@ -9,6 +9,7 @@ class BotPerformance extends Model
 {
     protected $table = 'bot_performance';
 
+    /** Calendar dates are stored as plain Y-m-d strings so equality lookups work on every driver. */
     protected $fillable = [
         'bot_id',
         'period_date',
@@ -21,7 +22,6 @@ class BotPerformance extends Model
     protected function casts(): array
     {
         return [
-            'period_date' => 'date',
             'profit' => 'decimal:18',
             'drawdown' => 'decimal:4',
             'win_rate' => 'decimal:4',

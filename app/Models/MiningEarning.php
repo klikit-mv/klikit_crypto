@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MiningEarning extends Model
 {
+    /** Calendar dates are stored as plain Y-m-d strings so equality lookups work on every driver. */
     protected $fillable = [
         'user_id',
         'pool_id',
@@ -20,7 +21,6 @@ class MiningEarning extends Model
     {
         return [
             'amount' => 'decimal:18',
-            'date' => 'date',
         ];
     }
 

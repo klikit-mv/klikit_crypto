@@ -15,7 +15,11 @@ class EnsureFeature
     public function handle(Request $request, Closure $next, string $feature): Response
     {
         if (! $request->user() || ! $this->subscriptions->hasFeature($request->user(), $feature)) {
-            abort(402, 'Your subscription plan does not include this feature.');
+            $message = 'Your subscription plan does not include this feature.';
+            if (! $request->expectsJson() && $request->user()) {
+                return redirect()->route('subscription.index')->withErrors(['plan' => $message.' Upgrade to unlock it.']);
+            }
+            abort(402, $message);
         }
 
         return $next($request);

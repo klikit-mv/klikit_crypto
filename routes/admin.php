@@ -7,6 +7,7 @@ use App\Modules\Administration\Http\Controllers\SystemController;
 use App\Modules\Administration\Http\Controllers\TradingAdminController;
 use App\Modules\Administration\Http\Controllers\UserController;
 use App\Modules\Administration\Http\Controllers\WalletReviewController;
+use App\Modules\Mining\Http\Controllers\MiningAdminController;
 use App\Modules\Signals\Http\Controllers\TelegramAdminController;
 use App\Modules\TradingBots\Http\Controllers\BotAdminController;
 use Illuminate\Support\Facades\Route;
@@ -53,3 +54,7 @@ Route::post('telegram/channels/{channel}/toggle', [TelegramAdminController::clas
 
 Route::get('bots', [BotAdminController::class, 'index'])->name('bots.index');
 Route::post('bots/{bot}/stop', [BotAdminController::class, 'stop'])->name('bots.stop');
+
+Route::get('mining', [MiningAdminController::class, 'index'])->name('mining.index');
+Route::post('mining/pools', [MiningAdminController::class, 'storePool'])->name('mining.pools.store');
+Route::post('mining/pools/{pool}/toggle', [MiningAdminController::class, 'togglePool'])->name('mining.pools.toggle');
