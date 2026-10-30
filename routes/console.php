@@ -8,3 +8,5 @@ Schedule::command('subscriptions:expire')->hourly();
 Schedule::command('ledger:verify')->dailyAt('02:15');
 Schedule::command('alerts:check')->everyMinute()->withoutOverlapping();
 Schedule::command('signals:expire')->everyMinute();
+Schedule::command('bots:run')->everyMinute()->withoutOverlapping();
+Schedule::command('bots:performance')->hourly();

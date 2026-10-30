@@ -7,6 +7,7 @@ use App\Modules\Signals\Http\Controllers\SignalController;
 use App\Modules\Signals\Http\Controllers\TelegramWebhookController;
 use App\Modules\Subscriptions\Http\Controllers\Web\SubscriptionController;
 use App\Modules\Trading\Http\Controllers\Web\TradingController;
+use App\Modules\TradingBots\Http\Controllers\BotController;
 use App\Modules\Wallet\Http\Controllers\Web\WalletController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +48,18 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::delete('signals/channels/{channel}/subscribe', [SignalController::class, 'unsubscribe'])->name('signals.unsubscribe');
     Route::post('signals/executions/{execution}/approve', [SignalController::class, 'approve'])->name('signals.approve');
     Route::post('signals/executions/{execution}/reject', [SignalController::class, 'reject'])->name('signals.reject');
+
+    Route::get('bots', [BotController::class, 'index'])->name('bots.index');
+    Route::post('bots', [BotController::class, 'store'])->name('bots.store');
+    Route::get('bots/backtests', [BotController::class, 'backtests'])->name('bots.backtests');
+    Route::post('bots/backtests', [BotController::class, 'runBacktest'])->name('bots.backtests.run');
+    Route::get('bots/{bot}', [BotController::class, 'show'])->name('bots.show');
+    Route::put('bots/{bot}', [BotController::class, 'update'])->name('bots.update');
+    Route::post('bots/{bot}/start', [BotController::class, 'start'])->name('bots.start');
+    Route::post('bots/{bot}/stop', [BotController::class, 'stop'])->name('bots.stop');
+    Route::delete('bots/{bot}', [BotController::class, 'destroy'])->name('bots.destroy');
+    Route::post('bot-signals/{signal}/approve', [BotController::class, 'approveSignal'])->name('bots.signals.approve');
+    Route::post('bot-signals/{signal}/reject', [BotController::class, 'rejectSignal'])->name('bots.signals.reject');
 
     Route::get('subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('subscription/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');

@@ -11,6 +11,7 @@ use App\Modules\Trading\Http\Controllers\Api\OrderController;
 use App\Modules\Trading\Http\Controllers\Api\PositionController;
 use App\Modules\Trading\Http\Controllers\Api\RiskProfileController;
 use App\Modules\Trading\Http\Controllers\Api\VenueAccountController;
+use App\Modules\TradingBots\Http\Controllers\BotController;
 use App\Modules\Wallet\Http\Controllers\Api\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +63,21 @@ Route::middleware(['auth:sanctum', 'active', 'throttle:api'])->group(function ()
         Route::delete('channels/{channel}/subscribe', [SignalController::class, 'unsubscribe']);
         Route::post('executions/{execution}/approve', [SignalController::class, 'approve'])->middleware('idempotent');
         Route::post('executions/{execution}/reject', [SignalController::class, 'reject']);
+    });
+
+    Route::prefix('bots')->group(function () {
+        Route::get('/', [BotController::class, 'index']);
+        Route::post('/', [BotController::class, 'store']);
+        Route::get('backtests', [BotController::class, 'backtests']);
+        Route::post('backtests', [BotController::class, 'runBacktest']);
+        Route::get('{bot}', [BotController::class, 'show']);
+        Route::get('{bot}/performance', [BotController::class, 'show']);
+        Route::put('{bot}', [BotController::class, 'update']);
+        Route::post('{bot}/start', [BotController::class, 'start']);
+        Route::post('{bot}/stop', [BotController::class, 'stop']);
+        Route::delete('{bot}', [BotController::class, 'destroy']);
+        Route::post('signals/{signal}/approve', [BotController::class, 'approveSignal'])->middleware('idempotent');
+        Route::post('signals/{signal}/reject', [BotController::class, 'rejectSignal']);
     });
 
     Route::get('positions', [PositionController::class, 'index']);

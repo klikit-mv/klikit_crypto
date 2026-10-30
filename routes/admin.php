@@ -8,6 +8,7 @@ use App\Modules\Administration\Http\Controllers\TradingAdminController;
 use App\Modules\Administration\Http\Controllers\UserController;
 use App\Modules\Administration\Http\Controllers\WalletReviewController;
 use App\Modules\Signals\Http\Controllers\TelegramAdminController;
+use App\Modules\TradingBots\Http\Controllers\BotAdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,3 +50,6 @@ Route::get('telegram', [TelegramAdminController::class, 'index'])->name('telegra
 Route::post('telegram/bots', [TelegramAdminController::class, 'storeBot'])->name('telegram.bots.store');
 Route::post('telegram/channels', [TelegramAdminController::class, 'storeChannel'])->name('telegram.channels.store');
 Route::post('telegram/channels/{channel}/toggle', [TelegramAdminController::class, 'toggleChannel'])->name('telegram.channels.toggle');
+
+Route::get('bots', [BotAdminController::class, 'index'])->name('bots.index');
+Route::post('bots/{bot}/stop', [BotAdminController::class, 'stop'])->name('bots.stop');

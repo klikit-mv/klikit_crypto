@@ -34,6 +34,7 @@
                     @can('integrations.manage')<li><a class="nav-link @if(request()->routeIs('admin.integrations')) active @endif" href="{{ route('admin.integrations') }}">Exchanges &amp; brokers</a></li>@endcan
                     @if(auth()->user()->can('trading.limits') || auth()->user()->can('trading.halt'))<li><a class="nav-link @if(request()->routeIs('admin.trading.controls')) active @endif" href="{{ route('admin.trading.controls') }}">Trading controls</a></li>@endif
                     @can('trading.monitor')<li><a class="nav-link @if(request()->routeIs('admin.trading.orders')) active @endif" href="{{ route('admin.trading.orders') }}">Order monitor</a></li>@endcan
+                    @can('trading.monitor')<li><a class="nav-link @if(request()->routeIs('admin.bots.*')) active @endif" href="{{ route('admin.bots.index') }}">Bot monitor</a></li>@endcan
                     @can('telegram.manage')<li><a class="nav-link @if(request()->routeIs('admin.telegram.*')) active @endif" href="{{ route('admin.telegram.index') }}">Telegram</a></li>@endcan
                     @can('system.monitor')<li><a class="nav-link @if(request()->routeIs('admin.jobs')) active @endif" href="{{ route('admin.jobs') }}">Failed jobs</a></li>@endcan
                     @can('audit.view')<li><a class="nav-link @if(request()->routeIs('admin.audit')) active @endif" href="{{ route('admin.audit') }}">Audit logs</a></li>@endcan
@@ -43,6 +44,7 @@
                     <li><a class="nav-link @if(request()->routeIs('dashboard')) active @endif" href="{{ route('dashboard') }}">Dashboard</a></li>
                     <li><a class="nav-link @if(request()->routeIs('trading.index')) active @endif" href="{{ route('trading.index') }}">Trading</a></li>
                     <li><a class="nav-link @if(request()->routeIs('charts.*')) active @endif" href="{{ route('charts.index') }}">Charts &amp; alerts</a></li>
+                    <li><a class="nav-link @if(request()->routeIs('bots.*')) active @endif" href="{{ route('bots.index') }}">Trading bots</a></li>
                     <li><a class="nav-link @if(request()->routeIs('signals.*')) active @endif" href="{{ route('signals.index') }}">Telegram signals</a></li>
                     <li><a class="nav-link @if(request()->routeIs('trading.risk')) active @endif" href="{{ route('trading.risk') }}">Risk settings</a></li>
                     <li><a class="nav-link @if(request()->routeIs('wallet.*')) active @endif" href="{{ route('wallet.index') }}">Wallet</a></li>
