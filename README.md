@@ -13,6 +13,16 @@ bots and mining management). This release covers the **v1.0 development package*
 Live order routing is **disabled by default** (`TRADING_LIVE_ENABLED=false`). Every order runs
 against the paper-trading adapter using real stored market prices.
 
+## Screenshots
+
+| User dashboard | Paper trading |
+| --- | --- |
+| ![Dashboard](docs/screenshots/02-user-dashboard.png) | ![Trading](docs/screenshots/03-trading.png) |
+| **Admin overview** | **Plan editor** |
+| ![Admin](docs/screenshots/07-admin-overview.png) | ![Plans](docs/screenshots/09-admin-plan-edit.png) |
+
+More in [`docs/screenshots`](docs/screenshots).
+
 ## Quick start
 
 ```bash
